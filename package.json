@@ -1,0 +1,17 @@
+{
+  "name": "the-chronicle",
+  "version": "1.0.0",
+  "description": "The Chronicle - Premium Editorial and Publishing Platform",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx -y http-server -p 3000",
+    "start": "npx -y http-server -p 3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cloudinary": "^2.10.0",
+    "firebase": "^12.14.0"
+  }
+}
