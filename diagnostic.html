@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Diagnostic Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .success { color: green; }
+    .error { color: red; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    #output { background: #f0f0f0; padding: 15px; margin-top: 20px; border-radius: 5px; }
+    pre { background: white; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>The Chronicle - Diagnostic Page</h1>
+  
+  <button onclick="testLocalStorage()">Test LocalStorage</button>
+  <button onclick="testDemoUsers()">Load Demo Users</button>
+  <button onclick="testSignIn()">Test Admin Sign-In</button>
+  <button onclick="clearStorage()">Clear All Data</button>
+  
+  <div id="output"></div>
+  
+  <script>
+    const DEMO_USERS = [
+      {
+        uid: 'demo-admin',
+        name: 'System Admin',
+        email: 'admin@thechronicle.com',
+        password: 'admin123',
+        role: 'Admin',
+        authorTitle: 'Publication Administrator',
+        bookmarks: []
+      },
+      {
+        uid: 'demo-author-julian',
+        name: 'Julian Thorne',
+        email: 'julian@thechronicle.com',
+        password: 'password123',
+        role: 'Author',
+        authorTitle: 'Culture Correspondent',
+        bookmarks: []
+      },
+      {
+        uid: 'demo-author-eleanor',
+        name: 'Eleanor Jenkins',
+        email: 'eleanor@thechronicle.com',
+        password: 'password123',
+        role: 'Author',
+        authorTitle: 'Political Analyst',
+        bookmarks: []
+      },
+      {
+        uid: 'demo-reader-elena',
+        name: 'Elena Rossi',
+        email: 'elena@reader.com',
+        password: 'password123',
+        role: 'Reader',
+        authorTitle: '',
+        bookmarks: []
+      }
+    ];
+    
+    function output(msg, isError = false) {
+      const div = document.getElementById('output');
+      const p = document.createElement('p');
+      p.className = isError ? 'error' : 'success';
+      p.textContent = msg;
+      div.appendChild(p);
+    }
+    
+    function testLocalStorage() {
+      document.getElementById('output').innerHTML = '';
+      try {
+        localStorage.setItem('test', 'value');
+        const val = localStorage.getItem('test');
+        if (val === 'value') {
+          output('✓ LocalStorage is working!');
+        } else {
+          output('✗ LocalStorage read failed', true);
+        }
+        localStorage.removeItem('test');
+      } catch (e) {
+        output('✗ LocalStorage error: ' + e.message, true);
+      }
+    }
+    
+    function testDemoUsers() {
+      document.getElementById('output').innerHTML = '';
+      try {
+        // Save demo users
+        localStorage.setItem('chronicle_local_users', JSON.stringify(DEMO_USERS));
+        output('✓ Demo users saved to localStorage');
+        
+        // Read them back
+        const users = JSON.parse(localStorage.getItem('chronicle_local_users'));
+        output('✓ Found ' + users.length + ' users');
+        
+        const pre = document.createElement('pre');
+        pre.textContent = JSON.stringify(users, null, 2);
+        document.getElementById('output').appendChild(pre);
+      } catch (e) {
+        output('✗ Error: ' + e.message, true);
+      }
+    }
+    
+    function testSignIn() {
+      document.getElementById('output').innerHTML = '';
+      const email = 'admin@thechronicle.com';
+      const password = 'admin123';
+      
+      try {
+        const users = JSON.parse(localStorage.getItem('chronicle_local_users') || '[]');
+        output('Found ' + users.length + ' users in storage');
+        
+        const user = users.find(u => 
+          u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        );
+        
+        if (user) {
+          output('✓ Admin account found!');
+          const pre = document.createElement('pre');
+          pre.textContent = JSON.stringify(user, null, 2);
+          document.getElementById('output').appendChild(pre);
+        } else {
+          output('✗ Admin account NOT found', true);
+          output('Available emails: ' + users.map(u => u.email).join(', '));
+        }
+      } catch (e) {
+        output('✗ Error: ' + e.message, true);
+      }
+    }
+    
+    function clearStorage() {
+      if (confirm('Clear all localStorage data?')) {
+        localStorage.clear();
+        document.getElementById('output').innerHTML = '';
+        output('✓ All data cleared');
+      }
+    }
+  </script>
+</body>
+</html>

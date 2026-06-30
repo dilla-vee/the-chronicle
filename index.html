@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Chronicle | Premium Long-Form Journalism</title>
+  <meta name="description" content="A curated space for deep analysis, culture, technology, politics, and science. Register as an author to publish and interact with reviews and discussions.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header / Navigation -->
+  <header class="main-header">
+    <div class="header-container">
+      <h1 class="logo" id="logo-btn">THE CHRONICLE</h1>
+      
+      <nav class="main-nav">
+        <ul class="nav-links">
+          <li><button class="nav-link active" data-category="All">ALL</button></li>
+          <li><button class="nav-link" data-category="Politics">POLITICS</button></li>
+          <li><button class="nav-link" data-category="Culture">CULTURE</button></li>
+          <li><button class="nav-link" data-category="Tech">TECH</button></li>
+          <li><button class="nav-link" data-category="Science">SCIENCE</button></li>
+          <li><button class="nav-link" data-category="Opinion">OPINION</button></li>
+        </ul>
+      </nav>
+      
+      <div class="header-actions">
+        <!-- Search bar toggler -->
+        <div class="search-wrapper">
+          <button id="search-toggle-btn" class="icon-btn" aria-label="Search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+          <div class="search-input-container" id="search-container">
+            <input type="text" id="search-input" placeholder="Search articles...">
+          </div>
+        </div>
+
+        <!-- Bookmark drawer trigger button -->
+        <button id="bookmark-toggle-btn" class="icon-btn" aria-label="Bookmarked Articles">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+
+        <!-- Theme Mode toggle button -->
+        <button id="theme-toggle-btn" class="icon-btn" aria-label="Toggle Dark Mode">
+          <!-- Moon SVG -->
+          <svg id="theme-moon-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <!-- Sun SVG -->
+          <svg id="theme-sun-svg" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+
+        <span id="user-display" class="user-profile-badge hidden"></span>
+        <button id="admin-panel-btn" class="secondary-btn hidden" style="padding: 0.5rem 1rem; font-size: 0.75rem;">ADMIN PANEL</button>
+        <button id="auth-btn" class="text-btn">SIGN IN</button>
+        <button id="write-for-us-btn" class="action-btn">WRITE FOR US</button>
+      </div>
+    </div>
+    <!-- Reading scroll progress bar -->
+    <div class="scroll-progress-container">
+      <div id="scroll-progress-bar" class="scroll-progress-bar"></div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="toast-notification" class="toast hidden"></div>
+
+  <!-- Main Content Areas (SPA Views) -->
+  <main class="main-content">
+    
+    <!-- 1. HOME VIEW -->
+    <section id="home-view" class="view-section active">
+      <div class="home-grid">
+        <!-- Left: Featured & Trending -->
+        <div class="home-main-col">
+          <div id="featured-article-container">
+            <!-- Dynamic featured article -->
+          </div>
+          
+          <div class="section-header-row">
+            <h2 class="section-title">Trending Perspectives</h2>
+            <div class="sort-control-container">
+              <span class="sort-label">Sort By:</span>
+              <button class="sort-tab active" data-sort="date">LATEST</button>
+              <button class="sort-tab" data-sort="reads">READS</button>
+              <button class="sort-tab" data-sort="reviews">REVIEWS</button>
+            </div>
+          </div>
+          <div id="trending-articles-grid" class="articles-grid">
+            <!-- Dynamic grid of standard articles -->
+          </div>
+        </div>
+        
+        <!-- Right: Latest News Sidebar -->
+        <aside class="home-sidebar">
+          <div class="sidebar-card">
+            <div class="sidebar-header">
+              <h3 class="sidebar-title">LATEST NEWS</h3>
+              <span class="sidebar-indicator"></span>
+            </div>
+            <ul class="latest-news-list" id="latest-news-container">
+              <!-- Dynamic news list items -->
+            </ul>
+            <button class="sidebar-btn-link" id="view-all-news-btn">VIEW ALL NEWS</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 2. ARTICLE DETAILS VIEW -->
+    <section id="article-view" class="view-section hidden">
+      <article class="article-detail-container" id="article-detail-content">
+        <!-- Dynamic deep-dive article content -->
+      </article>
+
+      <!-- Reader Reviews Section -->
+      <section class="reviews-section">
+        <div class="reviews-header-container">
+          <h3 class="serif-title">Reader Reviews</h3>
+          <div class="dynamic-score-display" id="average-score-container">
+            <!-- Dynamic average score stars & scale -->
+          </div>
+        </div>
+
+        <!-- Add Review Trigger Button / Form Form -->
+        <div class="add-review-wrapper">
+          <button id="toggle-review-form-btn" class="secondary-btn">Write a Review</button>
+          
+          <form id="new-review-form" class="review-form hidden">
+            <h4>Share Your Perspective</h4>
+            <div class="form-row">
+              <div class="rating-input">
+                <span class="label">Your Rating:</span>
+                <div class="star-rating-selector" id="star-selector">
+                  <span class="star-opt" data-rating="1">★</span>
+                  <span class="star-opt" data-rating="2">★</span>
+                  <span class="star-opt" data-rating="3">★</span>
+                  <span class="star-opt" data-rating="4">★</span>
+                  <span class="star-opt" data-rating="5">★</span>
+                </div>
+                <input type="hidden" id="review-rating-value" value="5">
+              </div>
+            </div>
+            <div class="form-group">
+              <input type="text" id="review-title" placeholder="Review Title (e.g., Thought Provoking)" required>
+            </div>
+            <div class="form-group">
+              <textarea id="review-text" rows="3" placeholder="Write your review here..." required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="cancel-review-btn" class="text-btn">Cancel</button>
+              <button type="submit" class="action-btn-small">Submit Review</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Reviews Grid -->
+        <div class="reviews-grid" id="reviews-list-container">
+          <!-- Dynamic reviews cards -->
+        </div>
+      </section>
+
+      <!-- Discussion/Comments Section -->
+      <section class="discussion-section">
+        <h3 class="serif-title">Discussion</h3>
+        
+        <div class="discussion-composer">
+          <textarea id="new-comment-textarea" placeholder="Join the conversation..." rows="3"></textarea>
+          <div class="discussion-composer-actions">
+            <button id="post-comment-btn" class="action-btn-small">POST COMMENT</button>
+          </div>
+        </div>
+
+        <div class="comments-thread-container" id="comments-thread-list">
+          <!-- Dynamic threaded comments -->
+        </div>
+      </section>
+    </section>
+
+    <!-- 3. PUBLISHING / WRITER VIEW -->
+    <section id="write-view" class="view-section hidden">
+      <div class="composer-container">
+        <h2 class="serif-title">Draft New Publication</h2>
+        <p class="composer-sub">Create your next piece of long-form journalism. Ensure high journalistic standards before publishing.</p>
+        
+        <form id="article-composer-form">
+          <div class="form-group">
+            <label for="comp-title">Title</label>
+            <input type="text" id="comp-title" placeholder="Enter article headline..." required>
+          </div>
+          
+          <div class="form-group">
+            <label for="comp-subtitle">Subtitle</label>
+            <input type="text" id="comp-subtitle" placeholder="Enter article summary/subheading..." required>
+          </div>
+          
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="comp-category">Category</label>
+              <select id="comp-category" required>
+                <option value="Politics">Politics & Global Affairs</option>
+                <option value="Culture">Culture</option>
+                <option value="Tech">Technology & Ethics</option>
+                <option value="Science">Science & Neuro-Biology</option>
+                <option value="Opinion">Opinion & Perspectives</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="comp-readtime">Reading Time (Minutes)</label>
+              <input type="number" id="comp-readtime" min="1" max="60" value="8" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Cover Image Source</label>
+            <div class="cover-image-picker">
+              <div id="file-upload-container" class="file-upload-container">
+                <div class="file-upload-box" id="file-upload-box">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-box-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span class="upload-box-text">Choose file or drag here</span>
+                  <input type="file" id="comp-image-file" class="comp-image-file-input" accept="image/*">
+                </div>
+                <div id="upload-status-indicator" class="upload-status hidden">
+                  <div class="spinner"></div>
+                  <span>Uploading to Cloudinary...</span>
+                </div>
+                <div id="upload-preview-container" class="upload-preview-container hidden">
+                  <img id="upload-preview-img" src="" alt="Uploaded image preview">
+                  <button type="button" id="remove-uploaded-img-btn" class="remove-preview-btn" aria-label="Remove image">&times;</button>
+                </div>
+              </div>
+              <div class="preset-gallery-label">Or select a high-fidelity curated preset cover:</div>
+              <div class="preset-gallery" id="image-preset-gallery">
+                <div class="preset-img-card active" data-url="https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=1200&q=80">
+                  <img src="https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=150&q=80" alt="Books">
+                  <span>Literature</span>
+                </div>
+                <div class="preset-img-card" data-url="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1200&q=80">
+                  <img src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=150&q=80" alt="Columns">
+                  <span>Statecraft</span>
+                </div>
+                <div class="preset-img-card" data-url="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1200&q=80">
+                  <img src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=150&q=80" alt="Typewriter">
+                  <span>Journalism</span>
+                </div>
+                <div class="preset-img-card" data-url="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1200&q=80">
+                  <img src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=150&q=80" alt="Tech">
+                  <span>Technology</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="comp-content">Article Content (HTML formatting supported)</label>
+            <textarea id="comp-content" rows="12" placeholder="Start typing the article body. Use <p> tags for paragraphs. Use <span> tags if desired." required></textarea>
+          </div>
+          
+          <div class="composer-actions">
+            <button type="button" id="discard-draft-btn" class="secondary-btn">Discard Draft</button>
+            <button type="submit" class="action-btn">PUBLISH ARTICLE</button>
+          </div>
+        </form>
+
+        <!-- Author's publication draft tracker -->
+        <div class="author-publications-section" style="margin-top: 3.5rem; border-top: 1px solid var(--color-border); padding-top: 2.5rem;">
+          <div class="author-pub-header">
+            <div>
+              <h3 class="serif-title" style="font-size: 1.4rem; margin-bottom: 0.25rem;">My Submissions & Drafts</h3>
+              <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0;">Track the status of your publications. New submissions will await review and authorization by an administrator.</p>
+            </div>
+            <div class="sort-control-container author-dashboard-sort">
+              <span class="sort-label">Sort:</span>
+              <button class="author-sort-tab active" data-sort="date">DATE</button>
+              <button class="author-sort-tab" data-sort="reads">READS</button>
+              <button class="author-sort-tab" data-sort="reviews">REVIEWS</button>
+            </div>
+          </div>
+          <div class="admin-list" id="author-articles-list">
+            <!-- Dynamic list of author articles -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. ADMIN PANEL VIEW -->
+    <section id="admin-view" class="view-section hidden">
+      <div class="composer-container" style="max-width: 1000px;">
+        <h2 class="serif-title">Admin Publication Review Board</h2>
+        <p class="composer-sub">Manage author drafts, approve pending articles, or audit published pieces.</p>
+
+        <div class="admin-dashboard-tabs">
+          <button class="admin-tab-btn active" id="tab-pending-btn">Pending Submissions (<span id="pending-count">0</span>)</button>
+          <button class="admin-tab-btn" id="tab-published-btn">Published Articles</button>
+        </div>
+
+        <!-- Pending Submissions Sub-View -->
+        <div id="admin-pending-pane" class="admin-pane-content">
+          <div class="admin-list" id="admin-pending-list">
+            <!-- Pending articles dynamically generated -->
+          </div>
+        </div>
+
+        <!-- Published Sub-View -->
+        <div id="admin-published-pane" class="admin-pane-content hidden">
+          <div class="admin-list" id="admin-published-list">
+            <!-- Published articles dynamically generated -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- AUTHENTICATION DIALOG (Modal) -->
+  <div id="auth-modal" class="modal-overlay hidden">
+    <div class="modal-card auth-modal-card">
+      
+      <!-- LEFT SIDEBAR: Visual Branding & Color Gradient -->
+      <div class="auth-sidebar">
+        <div class="auth-sidebar-bg-glow"></div>
+        <div class="auth-sidebar-shapes">
+          <div class="auth-shape shape-1"></div>
+          <div class="auth-shape shape-2"></div>
+          <div class="auth-shape shape-3"></div>
+        </div>
+        <div class="auth-sidebar-content">
+          <div class="auth-sidebar-header">
+            <div class="auth-sidebar-logo">THE CHRONICLE</div>
+            <p class="auth-sidebar-tagline">Premium Long-Form Journalism</p>
+          </div>
+          
+          <div class="auth-sidebar-quote">
+            <span class="quote-mark">“</span>
+            <p>A curated space for deep analysis, culture, technology, politics, and science. Reflecting the human perspective in a hyper-digital age.</p>
+            <span class="quote-author">— The Chronicle Editorial</span>
+          </div>
+
+          <!-- Lively 3D Interactive Badge (Shown in Signup Mode) -->
+          <div class="auth-sidebar-3d-card" id="auth-3d-card-container">
+            <div class="auth-sidebar-3d-card-inner">
+              <div class="badge-header">
+                <span class="badge-logo">THE CHRONICLE</span>
+                <div class="badge-chip"></div>
+              </div>
+              <div class="badge-body">
+                <div class="badge-avatar-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div class="badge-info">
+                  <span class="badge-title">Editorial Identity</span>
+                  <span class="badge-name" id="badge-display-name">Anonymous Member</span>
+                  <span class="badge-role" id="badge-display-role">Reader / Guest</span>
+                </div>
+              </div>
+              <div class="badge-footer">
+                <div class="badge-barcode">
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <span class="badge-status-pill">Active Member</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="auth-sidebar-footer">
+          <div class="auth-bullet-indicators">
+            <span class="bullet active"></span>
+            <span class="bullet"></span>
+            <span class="bullet"></span>
+          </div>
+          <span class="auth-footer-year">&copy; 2026</span>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE: Modern Form Section -->
+      <div class="auth-form-container">
+        <button class="modal-close" id="close-auth-modal" aria-label="Close modal">&times;</button>
+        
+        <!-- SIGN IN FORM -->
+        <div id="signin-pane">
+          <h3 class="serif-title">Sign In</h3>
+          <p class="modal-subtitle">Welcome back to The Chronicle</p>
+          
+          <form id="signin-form">
+            <div class="form-group">
+              <label for="signin-email">Email Address</label>
+              <div class="input-field-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <input type="email" id="signin-email" placeholder="E.g. julian@thechronicle.com" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="signin-password">Password</label>
+              <div class="input-field-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="signin-password" placeholder="Enter your password" required>
+              </div>
+            </div>
+            
+            <button type="submit" class="action-btn width-100 gradient-btn">SIGN IN</button>
+          </form>
+
+          <div class="demo-notice-pills">
+            <span class="demo-pills-title">Quick Autofill Profiles</span>
+            <div class="pills-grid">
+              <button type="button" class="profile-pill pill-admin" onclick="selectDemoProfile('admin@thechronicle.com|admin123')">
+                <span class="pill-badge">ADMIN</span>
+                <span class="pill-name">System Admin</span>
+              </button>
+              <button type="button" class="profile-pill pill-author-1" onclick="selectDemoProfile('julian@thechronicle.com|password123')">
+                <span class="pill-badge">AUTHOR</span>
+                <span class="pill-name">Julian Thorne</span>
+              </button>
+              <button type="button" class="profile-pill pill-author-2" onclick="selectDemoProfile('eleanor@thechronicle.com|password123')">
+                <span class="pill-badge">AUTHOR</span>
+                <span class="pill-name">Eleanor Jenkins</span>
+              </button>
+              <button type="button" class="profile-pill pill-reader" onclick="selectDemoProfile('elena@reader.com|password123')">
+                <span class="pill-badge">READER</span>
+                <span class="pill-name">Elena Rossi</span>
+              </button>
+            </div>
+            
+            <!-- Hidden native select kept for JavaScript compatibility -->
+            <select id="demo-profile-autofill" style="display: none !important;">
+              <option value="">-- Choose Profile to Auto-Fill --</option>
+              <option value="admin@thechronicle.com|admin123">System Admin (admin@thechronicle.com)</option>
+              <option value="julian@thechronicle.com|password123">Julian Thorne (Author - Culture)</option>
+              <option value="eleanor@thechronicle.com|password123">Eleanor Jenkins (Author - Politics)</option>
+              <option value="elena@reader.com|password123">Elena Rossi (Reader / Subscriber)</option>
+            </select>
+          </div>
+          
+          <div class="modal-footer-toggle">
+            <span>New to the platform?</span>
+            <button id="go-to-signup" class="link-style-btn">Register here</button>
+          </div>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="signup-pane" class="hidden">
+          <h3 class="serif-title">Register Account</h3>
+          <p class="modal-subtitle">Join our community as a reader or publishing author</p>
+          
+          <form id="signup-form">
+            <div class="form-group">
+              <label for="signup-name">Full Name</label>
+              <div class="input-field-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <input type="text" id="signup-name" placeholder="E.g. Dr. Arthur Pendelton" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="signup-email-reg">Email Address</label>
+              <div class="input-field-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <input type="email" id="signup-email-reg" placeholder="E.g. arthur@thechronicle.com" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-password">Choose Password</label>
+              <div class="input-field-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="signup-password" placeholder="Enter password (min. 6 chars)" minlength="6" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Account Type</label>
+              <div class="role-cards-container">
+                <button type="button" class="role-card selected" data-role="Reader">
+                  <div class="role-card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                  </div>
+                  <div class="role-card-content">
+                    <span class="role-card-title">Reader</span>
+                    <span class="role-card-desc">Write comments & reader reviews</span>
+                  </div>
+                </button>
+                <button type="button" class="role-card" data-role="Author">
+                  <div class="role-card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                  </div>
+                  <div class="role-card-content">
+                    <span class="role-card-title">Author</span>
+                    <span class="role-card-desc">Publish articles & draft content</span>
+                  </div>
+                </button>
+              </div>
+              
+              <!-- Hidden select element kept for JavaScript compatibility -->
+              <select id="signup-role-type" required style="display: none !important;">
+                <option value="Reader" selected>Reader (Write Comments & Reviews)</option>
+                <option value="Author">Author (Publish Articles & Receive Badges)</option>
+              </select>
+            </div>
+            
+            <div class="form-group hidden" id="author-role-group">
+              <label for="signup-author-role">Author Title/Specialization</label>
+              <div class="input-field-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <input type="text" id="signup-author-role" placeholder="E.g. Senior Tech Correspondent, Literary Critic">
+              </div>
+            </div>
+
+            <button type="submit" class="action-btn width-100 gradient-btn">CREATE ACCOUNT</button>
+          </form>
+          
+          <div class="modal-footer-toggle">
+            <span>Already have an account?</span>
+            <button id="go-to-signin" class="link-style-btn">Sign in here</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script to sync custom visual controls (role cards, autofill pills) with hidden selects -->
+  <script>
+    function selectDemoProfile(val) {
+      const select = document.getElementById('demo-profile-autofill');
+      if (select) {
+        select.value = val;
+        select.dispatchEvent(new Event('change'));
+        
+        // Add visual active indicator to clicked profile pill
+        document.querySelectorAll('.profile-pill').forEach(pill => {
+          pill.classList.remove('active');
+        });
+        
+        // Find the button that was clicked and mark it active
+        const clickedPill = Array.from(document.querySelectorAll('.profile-pill')).find(p => {
+          return p.getAttribute('onclick').includes(val);
+        });
+        if (clickedPill) {
+          clickedPill.classList.add('active');
+        }
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const roleCards = document.querySelectorAll('.role-card');
+      const hiddenSelect = document.getElementById('signup-role-type');
+      
+      roleCards.forEach(card => {
+        card.addEventListener('click', () => {
+          roleCards.forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          
+          if (hiddenSelect) {
+            const role = card.getAttribute('data-role');
+            hiddenSelect.value = role;
+            hiddenSelect.dispatchEvent(new Event('change'));
+          }
+        });
+      });
+      
+      // Reset selections to default states when switching views or toggling
+      const signinBtn = document.getElementById('go-to-signin');
+      const signupBtn = document.getElementById('go-to-signup');
+      const authBtn = document.getElementById('auth-btn');
+      
+      function resetRoleCards() {
+        roleCards.forEach(c => {
+          if (c.getAttribute('data-role') === 'Reader') {
+            c.classList.add('selected');
+          } else {
+            c.classList.remove('selected');
+          }
+        });
+        if (hiddenSelect) {
+          hiddenSelect.value = 'Reader';
+          hiddenSelect.dispatchEvent(new Event('change'));
+        }
+        document.querySelectorAll('.profile-pill').forEach(pill => {
+          pill.classList.remove('active');
+        });
+      }
+      
+      if (signupBtn) signupBtn.addEventListener('click', resetRoleCards);
+      if (authBtn) authBtn.addEventListener('click', resetRoleCards);
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-col footer-brand-col">
+          <h2 class="logo" id="footer-logo-btn">THE CHRONICLE</h2>
+          <p>Premium long-form journalism reflecting culture, technology, politics, and science in a hyper-digital age.</p>
+          <div class="social-links">
+            <a href="#" class="social-icon" aria-label="Twitter">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+            </a>
+            <a href="#" class="social-icon" aria-label="Instagram">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            </a>
+            <a href="#" class="social-icon" aria-label="LinkedIn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            </a>
+          </div>
+        </div>
+        
+        <div class="footer-col footer-links-col">
+          <h4 class="footer-title">EXPLORE</h4>
+          <ul class="footer-links">
+            <li><button class="footer-link-item" data-category="All">All Stories</button></li>
+            <li><button class="footer-link-item" data-category="Politics">Politics</button></li>
+            <li><button class="footer-link-item" data-category="Culture">Culture</button></li>
+            <li><button class="footer-link-item" data-category="Tech">Technology</button></li>
+            <li><button class="footer-link-item" data-category="Science">Science</button></li>
+            <li><button class="footer-link-item" data-category="Opinion">Opinion</button></li>
+          </ul>
+        </div>
+        
+        <div class="footer-col footer-sub-col">
+          <h4 class="footer-title">THE NEWSLETTER</h4>
+          <p class="sub-text">Join 50,000+ readers who receive our weekend editorial digest.</p>
+          <form id="footer-subscribe-form" class="subscribe-form">
+            <div class="subscribe-input-group">
+              <input type="email" id="subscribe-email" placeholder="Your email address" required>
+              <button type="submit" class="subscribe-btn" aria-label="Subscribe">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </div>
+            <div class="subscribe-feedback" id="subscribe-feedback"></div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          &copy; 2026 The Chronicle. All rights reserved. Built as a high-fidelity interactive application.
+        </div>
+        <button id="back-to-top-btn" class="back-to-top" aria-label="Back to top">
+          <span>BACK TO TOP</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bookmark Drawer overlay & panel -->
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="bookmark-drawer" class="bookmark-drawer">
+    <div class="bookmark-drawer-header">
+      <h3 class="bookmark-drawer-title">Saved Perspectives</h3>
+      <button class="close-drawer-btn" id="close-drawer-btn" aria-label="Close bookmarks drawer">&times;</button>
+    </div>
+    <div class="bookmark-drawer-content" id="bookmark-drawer-list">
+      <!-- Dynamic bookmark item cards or empty state -->
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <!-- Firebase SDK Compat libraries for cloud storage -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

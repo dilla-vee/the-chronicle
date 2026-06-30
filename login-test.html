@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Test - The Chronicle</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 { margin-top: 0; color: #333; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #d4521f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button:hover { background: #b53e15; }
+    .message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success { background: #d4edda; color: #155724; display: block; }
+    .error { background: #f8d7da; color: #721c24; display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>The Chronicle Login Test</h1>
+    <p>Testing local authentication without Firebase</p>
+    
+    <form id="login-form">
+      <input type="email" id="email" placeholder="Email" value="admin@thechronicle.com" required>
+      <input type="password" id="password" placeholder="Password" value="admin123" required>
+      <button type="submit">SIGN IN</button>
+    </form>
+    
+    <div id="message" class="message"></div>
+  </div>
+  
+  <script>
+    const DEMO_USERS = [
+      {
+        uid: 'demo-admin',
+        name: 'System Admin',
+        email: 'admin@thechronicle.com',
+        password: 'admin123',
+        role: 'Admin',
+        authorTitle: 'Publication Administrator',
+        bookmarks: []
+      },
+      {
+        uid: 'demo-author-julian',
+        name: 'Julian Thorne',
+        email: 'julian@thechronicle.com',
+        password: 'password123',
+        role: 'Author',
+        authorTitle: 'Culture Correspondent',
+        bookmarks: []
+      }
+    ];
+    
+    // Initialize localStorage with demo users
+    localStorage.setItem('chronicle_local_users', JSON.stringify(DEMO_USERS));
+    
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const messageDiv = document.getElementById('message');
+      
+      console.log('Attempting login:', email);
+      
+      // Get users from localStorage
+      const users = JSON.parse(localStorage.getItem('chronicle_local_users') || '[]');
+      console.log('Found users:', users.length);
+      
+      // Find matching user
+      const user = users.find(u => 
+        u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      );
+      
+      if (user) {
+        messageDiv.className = 'message success';
+        messageDiv.textContent = `✓ Success! Logged in as ${user.name} (${user.role})`;
+        
+        // Save to session
+        const sessionUser = { ...user };
+        delete sessionUser.password;
+        sessionUser.localOnly = true;
+        
+        localStorage.setItem('chronicle_user', JSON.stringify(sessionUser));
+        
+        console.log('Login successful:', sessionUser);
+        
+        // Redirect to main page after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 2000);
+      } else {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = '✗ Invalid email or password';
+        console.log('Login failed');
+      }
+    });
+    
+    console.log('Login test page loaded');
+    console.log('localStorage supported:', typeof(Storage) !== 'undefined');
+  </script>
+</body>
+</html>

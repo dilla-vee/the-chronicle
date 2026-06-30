@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Signup Test</title>
+</head>
+<body>
+  <h1>Signup Form Test</h1>
+  
+  <form id="signup-form">
+    <input type="text" id="signup-name" placeholder="Name" required><br><br>
+    <input type="email" id="signup-email-reg" placeholder="Email" required><br><br>
+    <input type="password" id="signup-password" placeholder="Password" minlength="6" required><br><br>
+    
+    <select id="signup-role-type">
+      <option value="Reader">Reader</option>
+      <option value="Author">Author</option>
+    </select><br><br>
+    
+    <input type="text" id="signup-author-role" placeholder="Author Title (optional)"><br><br>
+    
+    <button type="submit">CREATE ACCOUNT</button>
+  </form>
+  
+  <div id="result"></div>
+  
+  <script>
+    const form = document.getElementById('signup-form');
+    console.log('Form found:', form);
+    
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        console.log('FORM SUBMITTED!');
+        e.preventDefault();
+        
+        const name = document.getElementById('signup-name').value;
+        const email = document.getElementById('signup-email-reg').value;
+        const password = document.getElementById('signup-password').value;
+        const role = document.getElementById('signup-role-type').value;
+        const authorTitle = document.getElementById('signup-author-role').value;
+        
+        document.getElementById('result').innerHTML = `
+          <h2>Success!</h2>
+          <p>Name: ${name}</p>
+          <p>Email: ${email}</p>
+          <p>Password: ${password}</p>
+          <p>Role: ${role}</p>
+          <p>Author Title: ${authorTitle}</p>
+        `;
+      });
+    } else {
+      console.error('Form NOT found!');
+    }
+  </script>
+</body>
+</html>

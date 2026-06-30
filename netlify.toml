@@ -1,0 +1,17 @@
+# netlify.toml - Netlify Configuration for The Chronicle
+
+[build]
+  # Publish the root directory since this is a pure static frontend application
+  publish = "."
+
+# Define custom HTTP headers for performance and security best practices
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # Disable caching to ensure users always get latest version
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
