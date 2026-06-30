@@ -1516,38 +1516,14 @@ function setupEventListeners() {
       return;
     }
 
-    if (!auth) {
-      try {
-        console.log('Creating local user...');
-        const localUser = createLocalUser({ name, email, password, role, authorTitle });
-        console.log('Local user created:', localUser);
-        saveUserSession(localUser);
-        state.bookmarks = [];
-        loadLocalArticles();
-        
-        // Force close modal
-        const modal = document.getElementById('auth-modal');
-        if (modal) {
-          modal.classList.add('hidden');
-        }
-        
-        showToast(`Account registered successfully. Welcome, ${name}!`);
-        
-        // Small delay before navigation to ensure toast is visible
-        setTimeout(() => {
-          if (role === 'Author') {
-            navigateTo('write');
-          } else {
-            navigateTo('home');
-          }
-        }, 500);
-      } catch (error) {
-        console.error('Signup error:', error);
-        showToast("Error: " + error.message);
-      }
+    // ALWAYS require Firebase for new user sign-ups
+    if (!firebaseReady || !auth || !db) {
+      showToast("Account creation is temporarily unavailable. Firebase is not connected. Please try again in a few minutes.");
+      console.error('Firebase not ready for sign-up');
       return;
     }
 
+    // Create account in Firebase
     auth.createUserWithEmailAndPassword(email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
