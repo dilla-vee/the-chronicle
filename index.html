@@ -496,12 +496,22 @@
                     <span class="role-card-desc">Publish articles & draft content</span>
                   </div>
                 </button>
+                <button type="button" class="role-card" data-role="Admin">
+                  <div class="role-card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  </div>
+                  <div class="role-card-content">
+                    <span class="role-card-title">Admin</span>
+                    <span class="role-card-desc">Manage articles & moderate content</span>
+                  </div>
+                </button>
               </div>
               
               <!-- Hidden select element kept for JavaScript compatibility -->
               <select id="signup-role-type" required style="display: none !important;">
                 <option value="Reader" selected>Reader (Write Comments & Reviews)</option>
                 <option value="Author">Author (Publish Articles & Receive Badges)</option>
+                <option value="Admin">Admin (Manage & Moderate Content)</option>
               </select>
             </div>
             

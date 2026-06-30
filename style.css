@@ -1676,7 +1676,7 @@ button {
 /* Visual Account Type Role Cards */
 .role-cards-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
   margin-top: 0.25rem;
   margin-bottom: 0.5rem;
