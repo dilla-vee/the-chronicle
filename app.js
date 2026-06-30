@@ -186,7 +186,9 @@ function deleteLocalArticle(articleId) {
 }
 
 function isLocalSession() {
-  return !db || (state.currentUser && state.currentUser.localOnly);
+  // Only use localStorage if Firebase is completely unavailable
+  // OR if the user explicitly has the localOnly flag
+  return !firebaseReady || !db || (state.currentUser && state.currentUser.localOnly === true);
 }
 
 function updateArticleRecord(articleId, updates) {
@@ -1370,75 +1372,111 @@ function setupEventListeners() {
       return;
     }
     
-    const localUser = findLocalUser(emailVal, passwordVal);
-    console.log('Local user found:', localUser);
-
-    if (localUser) {
-      const sessionUser = stripPrivateUserFields(localUser);
-      console.log('Session user:', sessionUser);
-      saveUserSession(sessionUser);
-      state.bookmarks = sessionUser.bookmarks || [];
-      loadLocalArticles();
-      const modal = document.getElementById('auth-modal');
-      if (modal) {
-        modal.classList.add('hidden');
-      }
-      showToast(`Welcome back, ${sessionUser.name}!`);
-      setTimeout(() => {
-        navigateTo('home');
-      }, 500);
-      return;
-    }
-
-    if (!auth) {
-      console.log('No local user found and Firebase disabled');
-      showToast("Invalid email or password.");
-      return;
-    }
-
-    auth.signInWithEmailAndPassword(emailVal, passwordVal)
-      .then(async (userCredential) => {
-        const user = userCredential.user;
-        // Fetch user profile from Firestore to redirect correctly
-        const doc = await db.collection('users').doc(user.uid).get();
-        let role = 'Reader';
-        let name = user.displayName || user.email.split('@')[0];
-        
-        if (doc.exists) {
-          const data = doc.data();
-          role = data.role || 'Reader';
-          name = data.name || name;
-        }
-        
-        showToast(`Welcome back, ${name}!`);
+    // Try Firebase first if available
+    if (firebaseReady && auth) {
+      auth.signInWithEmailAndPassword(emailVal, passwordVal)
+        .then(async (userCredential) => {
+          const user = userCredential.user;
+          // Fetch user profile from Firestore to redirect correctly
+          const doc = await db.collection('users').doc(user.uid).get();
+          let role = 'Reader';
+          let name = user.displayName || user.email.split('@')[0];
+          
+          if (doc.exists) {
+            const data = doc.data();
+            role = data.role || 'Reader';
+            name = data.name || name;
+          }
+          
+          // Save Firebase user session WITHOUT localOnly flag
+          const sessionUser = {
+            uid: user.uid,
+            name: name,
+            email: user.email,
+            role: role,
+            authorTitle: doc.exists ? (doc.data().authorTitle || '') : '',
+            bookmarks: doc.exists ? (doc.data().bookmarks || []) : []
+          };
+          saveUserSession(sessionUser);
+          state.bookmarks = sessionUser.bookmarks;
+          
+          // Load articles from Firebase
+          listenToArticles();
+          
+          showToast(`Welcome back, ${name}!`);
+          const modal = document.getElementById('auth-modal');
+          if (modal) modal.classList.add('hidden');
+          setTimeout(() => {
+            navigateTo('home');
+          }, 500);
+        })
+        .catch((error) => {
+          console.error('Firebase sign-in error:', error.code, error.message);
+          
+          // If Firebase fails, try localStorage as fallback
+          if (error.code === 'auth/too-many-requests' || 
+              error.code === 'auth/network-request-failed' ||
+              error.code === 'auth/user-not-found' ||
+              error.code === 'auth/wrong-password' ||
+              error.code === 'auth/invalid-credential') {
+            
+            console.log('Firebase failed, trying localStorage...');
+            const localUser = findLocalUser(emailVal, passwordVal);
+            
+            if (localUser) {
+              const sessionUser = stripPrivateUserFields(localUser);
+              saveUserSession(sessionUser);
+              state.bookmarks = sessionUser.bookmarks || [];
+              loadLocalArticles();
+              const modal = document.getElementById('auth-modal');
+              if (modal) modal.classList.add('hidden');
+              showToast(`Welcome back, ${sessionUser.name}! (Local mode)`);
+              setTimeout(() => {
+                navigateTo('home');
+              }, 500);
+              return;
+            }
+          }
+          
+          // Provide user-friendly error messages
+          let errorMsg = "Sign-in failed. ";
+          
+          if (error.code === 'auth/too-many-requests') {
+            errorMsg = "Too many failed attempts. Please try again in a few minutes or use a demo account: admin@thechronicle.com / admin123";
+          } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+            errorMsg = "Invalid email or password.";
+          } else if (error.code === 'auth/user-not-found') {
+            errorMsg = "No account found with this email. Please sign up first.";
+          } else if (error.code === 'auth/invalid-email') {
+            errorMsg = "Invalid email format.";
+          } else if (error.code === 'auth/network-request-failed') {
+            errorMsg = "Network error. Please check your connection.";
+          } else {
+            errorMsg = error.message;
+          }
+          
+          showToast(errorMsg);
+        });
+    } else {
+      // Firebase not available, use localStorage only
+      console.log('Firebase not available, using localStorage...');
+      const localUser = findLocalUser(emailVal, passwordVal);
+      
+      if (localUser) {
+        const sessionUser = stripPrivateUserFields(localUser);
+        saveUserSession(sessionUser);
+        state.bookmarks = sessionUser.bookmarks || [];
+        loadLocalArticles();
         const modal = document.getElementById('auth-modal');
         if (modal) modal.classList.add('hidden');
+        showToast(`Welcome back, ${sessionUser.name}!`);
         setTimeout(() => {
           navigateTo('home');
         }, 500);
-      })
-      .catch((error) => {
-        console.error('Firebase sign-in error:', error.code, error.message);
-        
-        // Provide user-friendly error messages
-        let errorMsg = "Sign-in failed. ";
-        
-        if (error.code === 'auth/too-many-requests') {
-          errorMsg = "Too many failed attempts. Please try again in a few minutes or use a demo account from localStorage.";
-        } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-          errorMsg = "Invalid email or password.";
-        } else if (error.code === 'auth/user-not-found') {
-          errorMsg = "No account found with this email. Please sign up first.";
-        } else if (error.code === 'auth/invalid-email') {
-          errorMsg = "Invalid email format.";
-        } else if (error.code === 'auth/network-request-failed') {
-          errorMsg = "Network error. Please check your connection.";
-        } else {
-          errorMsg = error.message;
-        }
-        
-        showToast(errorMsg);
-      });
+      } else {
+        showToast("Invalid email or password.");
+      }
+    }
   }
   
   if (signinForm) {
@@ -1527,6 +1565,21 @@ function setupEventListeners() {
           authorTitle: role === 'Author' ? authorTitle : '',
           bookmarks: []
         });
+
+        // Save Firebase user session WITHOUT localOnly flag
+        const sessionUser = {
+          uid: user.uid,
+          name: name,
+          email: email,
+          role: role,
+          authorTitle: role === 'Author' ? authorTitle : '',
+          bookmarks: []
+        };
+        saveUserSession(sessionUser);
+        state.bookmarks = [];
+        
+        // Load articles from Firebase
+        listenToArticles();
 
         showToast(`Account registered successfully. Welcome, ${name}!`);
         document.getElementById('auth-modal').classList.add('hidden');
