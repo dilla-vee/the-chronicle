@@ -1374,6 +1374,7 @@ function setupEventListeners() {
     const passwordVal = document.getElementById('signin-password').value;
     
     console.log('Sign-in attempt:', { email: emailVal, password: '***' });
+    console.log('Firebase status:', { firebaseReady, auth: !!auth, db: !!db });
     
     if (!emailVal || !passwordVal) {
       showToast("Please enter email and password.");
@@ -1382,6 +1383,7 @@ function setupEventListeners() {
     
     // Try Firebase first if available
     if (firebaseReady && auth) {
+      console.log('Attempting Firebase sign-in...');
       auth.signInWithEmailAndPassword(emailVal, passwordVal)
         .then(async (userCredential) => {
           const user = userCredential.user;
@@ -1419,41 +1421,59 @@ function setupEventListeners() {
           }, 500);
         })
         .catch((error) => {
-          console.error('Firebase sign-in error:', error.code, error.message);
-          
-          // Try localStorage as fallback for any Firebase failure
-          console.log('Firebase failed, trying localStorage...');
-          const localUser = findLocalUser(emailVal, passwordVal);
-          
-          if (localUser) {
-            const sessionUser = stripPrivateUserFields(localUser);
-            saveUserSession(sessionUser);
-            state.bookmarks = sessionUser.bookmarks || [];
-            loadLocalArticles();
-            const modal = document.getElementById('auth-modal');
-            if (modal) modal.classList.add('hidden');
-            showToast(`Welcome back, ${sessionUser.name}! (Local mode)`);
-            setTimeout(() => {
-              navigateTo('home');
-            }, 500);
-            return;
-          }
+          console.error('Firebase sign-in error:', error.code, error.message, error);
           
           // Provide user-friendly error messages
           let errorMsg = "Sign-in failed. ";
+          let shouldTryLocalStorage = false;
           
           if (error.code === 'auth/too-many-requests') {
-            errorMsg = "Too many failed attempts. Please try again in a few minutes or use a demo account: admin@thechronicle.com / admin123";
+            errorMsg = "Too many failed attempts. Please try again in a few minutes.";
+            shouldTryLocalStorage = true;
           } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
             errorMsg = "Invalid email or password.";
+            shouldTryLocalStorage = true;
           } else if (error.code === 'auth/user-not-found') {
             errorMsg = "No account found with this email. Please sign up first.";
+            shouldTryLocalStorage = true;
           } else if (error.code === 'auth/invalid-email') {
             errorMsg = "Invalid email format.";
           } else if (error.code === 'auth/network-request-failed') {
-            errorMsg = "Network error. Please check your connection.";
+            errorMsg = "Network error. Please check your internet connection and try again.";
+            shouldTryLocalStorage = true;
+          } else if (error.code === 'auth/user-disabled') {
+            errorMsg = "This account has been disabled. Please contact support.";
+          } else if (error.code === 'auth/operation-not-allowed') {
+            errorMsg = "Sign-in is temporarily disabled. Please try again later.";
+          } else if (error.message && error.message.includes('offline')) {
+            errorMsg = "You appear to be offline. Please check your internet connection.";
+            shouldTryLocalStorage = true;
+          } else if (error.message && error.message.includes('not online')) {
+            errorMsg = "Connection to authentication server failed. Please check your internet connection and try again.";
+            shouldTryLocalStorage = true;
           } else {
-            errorMsg = error.message;
+            errorMsg = `Authentication error: ${error.message}`;
+            shouldTryLocalStorage = true;
+          }
+          
+          // Try localStorage as fallback only for specific errors
+          if (shouldTryLocalStorage) {
+            console.log('Trying localStorage fallback...');
+            const localUser = findLocalUser(emailVal, passwordVal);
+            
+            if (localUser) {
+              const sessionUser = stripPrivateUserFields(localUser);
+              saveUserSession(sessionUser);
+              state.bookmarks = sessionUser.bookmarks || [];
+              loadLocalArticles();
+              const modal = document.getElementById('auth-modal');
+              if (modal) modal.classList.add('hidden');
+              showToast(`Welcome back, ${sessionUser.name}! (Offline mode)`);
+              setTimeout(() => {
+                navigateTo('home');
+              }, 500);
+              return;
+            }
           }
           
           showToast(errorMsg);
