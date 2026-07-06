@@ -229,7 +229,7 @@ let state = {
 };
 
 function listenToArticles() {
-  if (!db) {
+  if (isLocalSession()) {
     loadLocalArticles();
     return;
   }
@@ -299,6 +299,17 @@ function listenToArticles() {
 }
 
 function initApp() {
+  // Load local user session if present
+  const savedUser = localStorage.getItem('chronicle_user');
+  if (savedUser) {
+    try {
+      state.currentUser = JSON.parse(savedUser);
+      state.bookmarks = state.currentUser.bookmarks || [];
+    } catch (e) {
+      state.currentUser = null;
+    }
+  }
+
   initScrollObserver(); // Initialize scroll reveal observer
 
   // Load theme preference
@@ -320,17 +331,8 @@ function initApp() {
   // Start syncing articles from Firestore
   listenToArticles();
 
-  // Set up Firebase Auth state listener, or restore a local demo session.
+  // Set up Firebase Auth state listener
   if (!auth) {
-    const savedUser = localStorage.getItem('chronicle_user');
-    if (savedUser) {
-      try {
-        state.currentUser = JSON.parse(savedUser);
-        state.bookmarks = state.currentUser.bookmarks || [];
-      } catch (e) {
-        state.currentUser = null;
-      }
-    }
     updateUserInterface();
     renderCurrentView();
     return;
@@ -365,17 +367,23 @@ function initApp() {
         console.error("Error loading user profile:", err);
       }
     } else {
-      state.currentUser = null;
-      // Load bookmarks from local storage for anonymous session
-      const savedBookmarks = localStorage.getItem('chronicle_bookmarks');
-      if (savedBookmarks) {
-        try {
-          state.bookmarks = JSON.parse(savedBookmarks);
-        } catch(e) {
+      // Only clear user session if it is a Firebase session.
+      // If it is a localOnly session, preserve it!
+      if (state.currentUser && state.currentUser.localOnly) {
+        console.log("Preserving local user session:", state.currentUser);
+      } else {
+        state.currentUser = null;
+        // Load bookmarks from local storage for anonymous session
+        const savedBookmarks = localStorage.getItem('chronicle_bookmarks');
+        if (savedBookmarks) {
+          try {
+            state.bookmarks = JSON.parse(savedBookmarks);
+          } catch(e) {
+            state.bookmarks = [];
+          }
+        } else {
           state.bookmarks = [];
         }
-      } else {
-        state.bookmarks = [];
       }
     }
     updateUserInterface();
@@ -1413,29 +1421,22 @@ function setupEventListeners() {
         .catch((error) => {
           console.error('Firebase sign-in error:', error.code, error.message);
           
-          // If Firebase fails, try localStorage as fallback
-          if (error.code === 'auth/too-many-requests' || 
-              error.code === 'auth/network-request-failed' ||
-              error.code === 'auth/user-not-found' ||
-              error.code === 'auth/wrong-password' ||
-              error.code === 'auth/invalid-credential') {
-            
-            console.log('Firebase failed, trying localStorage...');
-            const localUser = findLocalUser(emailVal, passwordVal);
-            
-            if (localUser) {
-              const sessionUser = stripPrivateUserFields(localUser);
-              saveUserSession(sessionUser);
-              state.bookmarks = sessionUser.bookmarks || [];
-              loadLocalArticles();
-              const modal = document.getElementById('auth-modal');
-              if (modal) modal.classList.add('hidden');
-              showToast(`Welcome back, ${sessionUser.name}! (Local mode)`);
-              setTimeout(() => {
-                navigateTo('home');
-              }, 500);
-              return;
-            }
+          // Try localStorage as fallback for any Firebase failure
+          console.log('Firebase failed, trying localStorage...');
+          const localUser = findLocalUser(emailVal, passwordVal);
+          
+          if (localUser) {
+            const sessionUser = stripPrivateUserFields(localUser);
+            saveUserSession(sessionUser);
+            state.bookmarks = sessionUser.bookmarks || [];
+            loadLocalArticles();
+            const modal = document.getElementById('auth-modal');
+            if (modal) modal.classList.add('hidden');
+            showToast(`Welcome back, ${sessionUser.name}! (Local mode)`);
+            setTimeout(() => {
+              navigateTo('home');
+            }, 500);
+            return;
           }
           
           // Provide user-friendly error messages
@@ -2544,12 +2545,21 @@ function attachAdminActionEvents() {
           btn.textContent = 'Review & Preview';
         }
       } else if (action === 'approve') {
+        console.log('Approving article:', articleId, article.title);
+        console.log('isLocalSession:', isLocalSession());
+        console.log('firebaseReady:', firebaseReady);
+        console.log('db:', db);
+        
         updateArticleRecord(articleId, {
           status: 'Approved'
         })
         .then(() => {
+          console.log('Article approved successfully!');
           showToast(`Article "${article.title}" approved and published!`);
-          renderAdminView();
+          // Force re-render
+          setTimeout(() => {
+            renderAdminView();
+          }, 500);
         })
         .catch(err => {
           console.error("Error approving article:", err);
