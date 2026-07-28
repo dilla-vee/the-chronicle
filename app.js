@@ -424,9 +424,19 @@ function enforceSingleAdminRole(user) {
   
   console.log("[DEBUG] enforceSingleAdminRole - email:", user.email, "name:", user.name, "role:", user.role, "isAllowed:", isAllowedAdmin);
   
-  if (user.role === 'Admin' && !isAllowedAdmin) {
-    console.warn("Forcing role downgrade to Reader for unauthorized user:", user.email);
-    user.role = 'Reader';
+  if (isAllowedAdmin) {
+    if (user.role !== 'Admin') {
+      console.log("[DEBUG] enforceSingleAdminRole - Upgrading allowed account to Admin role");
+      user.role = 'Admin';
+      // Save the updated role back to localStorage so it persists
+      localStorage.setItem('chronicle_user', JSON.stringify(user));
+    }
+  } else {
+    if (user.role === 'Admin') {
+      console.warn("Forcing role downgrade to Reader for unauthorized user:", user.email);
+      user.role = 'Reader';
+      localStorage.setItem('chronicle_user', JSON.stringify(user));
+    }
   }
   return user;
 }
