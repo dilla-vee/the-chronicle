@@ -422,6 +422,8 @@ function enforceSingleAdminRole(user) {
   const nameLower = (user.name || '').toLowerCase();
   const isAllowedAdmin = emailLower.includes('admin') || nameLower.includes('admin') || emailLower === 'admin@thechronicle.com';
   
+  console.log("[DEBUG] enforceSingleAdminRole - email:", user.email, "name:", user.name, "role:", user.role, "isAllowed:", isAllowedAdmin);
+  
   if (user.role === 'Admin' && !isAllowedAdmin) {
     console.warn("Forcing role downgrade to Reader for unauthorized user:", user.email);
     user.role = 'Reader';
@@ -505,6 +507,8 @@ function initApp() {
         const emailLower = user.email ? user.email.toLowerCase() : '';
         const nameLower = (user.displayName || '').toLowerCase();
         const isAllowedAdmin = emailLower.includes('admin') || nameLower.includes('admin') || emailLower === 'admin@thechronicle.com';
+        
+        console.log("[DEBUG] Offline fallback check - email:", user.email, "displayName:", user.displayName, "isAllowedAdmin:", isAllowedAdmin);
         
         if (isAllowedAdmin) {
           role = 'Admin';
@@ -1342,6 +1346,7 @@ function checkForAdminUpgradeParam() {
 
 function updateUserInterface() {
   checkForAdminUpgradeParam();
+  console.log("[DEBUG] updateUserInterface - currentUser:", state.currentUser);
   const authBtn = document.getElementById('auth-btn');
   const userBadge = document.getElementById('user-display');
   const writeForUsBtn = document.getElementById('write-for-us-btn');
