@@ -188,7 +188,8 @@ function deleteLocalArticle(articleId) {
 function isLocalSession() {
   // Only use localStorage if Firebase is completely unavailable
   // OR if the user explicitly has the localOnly flag
-  return !firebaseReady || !db || (state.currentUser && state.currentUser.localOnly === true);
+  // OR if we are in fallback local mode due to database failures
+  return !firebaseReady || !db || state.isFallbackLocalMode || (state.currentUser && state.currentUser.localOnly === true);
 }
 
 function updateArticleRecord(articleId, updates) {
@@ -225,7 +226,8 @@ let state = {
   bookmarks: [],
   authorSortBy: 'date',
   homeSortBy: 'date',
-  uploadedImageUrl: null
+  uploadedImageUrl: null,
+  isFallbackLocalMode: false // Toggle to true if Firestore connection fails
 };
 
 let articlesUnsubscribe = null;
@@ -245,6 +247,7 @@ function listenToArticles() {
   }
 
   articlesUnsubscribe = db.collection('articles').orderBy('createdAt', 'desc').onSnapshot(async (snapshot) => {
+    state.isFallbackLocalMode = false; // Successfully connected to cloud database
     if (snapshot.empty) {
       // Seed database if it's completely empty!
       console.log("Firestore articles collection is empty. Seeding INITIAL_ARTICLES...");
@@ -303,6 +306,7 @@ function listenToArticles() {
     }
   }, (err) => {
     console.error("Firestore listener error:", err);
+    state.isFallbackLocalMode = true; // Fall back to local mode on failure
     showToast("Database unavailable. Continuing in local demo mode.");
     if (articlesUnsubscribe) {
       articlesUnsubscribe();
