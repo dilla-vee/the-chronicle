@@ -1960,6 +1960,7 @@ function setupEventListeners() {
       subtitle: subtitle,
       category: category,
       author: {
+        uid: state.currentUser.uid,
         name: state.currentUser.name,
         role: state.currentUser.authorTitle || 'Contributor',
         avatar: getInitials(state.currentUser.name)
