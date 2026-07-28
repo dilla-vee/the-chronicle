@@ -232,6 +232,31 @@ let state = {
 
 let articlesUnsubscribe = null;
 
+async function syncLocalArticlesToCloud() {
+  if (!firebaseReady || !db || !state.currentUser || state.currentUser.localOnly) return;
+  
+  const localArticlesRaw = localStorage.getItem('chronicle_articles');
+  if (!localArticlesRaw) return;
+  
+  try {
+    const localArticles = JSON.parse(localArticlesRaw);
+    for (const art of localArticles) {
+      // Sync local articles that do not exist in the online database yet
+      const existsInCloud = state.articles.some(a => a.id === art.id);
+      if (!existsInCloud) {
+        console.log(`Syncing local article to cloud: ${art.title}`);
+        const cloudArt = { ...art };
+        if (typeof cloudArt.createdAt === 'number') {
+          cloudArt.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        await db.collection('articles').doc(art.id).set(cloudArt);
+      }
+    }
+  } catch (e) {
+    console.error("Error during local-to-cloud article synchronization:", e);
+  }
+}
+
 function listenToArticles() {
   if (isLocalSession()) {
     if (articlesUnsubscribe) {
@@ -255,9 +280,9 @@ function listenToArticles() {
       const initial = window.INITIAL_ARTICLES || [];
       initial.forEach(art => {
         const docRef = db.collection('articles').doc(art.id);
-        batch.set({
+        batch.set(docRef, {
           title: art.title,
-          subtitle: art.subtitle,
+          subtitle: art.subtitle || '',
           category: art.category,
           author: art.author,
           date: art.date,
@@ -281,14 +306,70 @@ function listenToArticles() {
       return;
     }
 
-    state.articles = [];
+    let dbArticles = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      state.articles.push({
+      
+      // Parse server timestamp
+      let dateVal = Date.now();
+      if (data.createdAt) {
+        if (data.createdAt.toDate) {
+          dateVal = data.createdAt.toDate().getTime();
+        } else if (typeof data.createdAt === 'number') {
+          dateVal = data.createdAt;
+        } else if (data.createdAt.seconds) {
+          dateVal = data.createdAt.seconds * 1000;
+        }
+      }
+      
+      const formattedDate = data.date || new Date(dateVal).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+      
+      // Normalize author object to prevent dashboard crash on string/null values
+      let rawAuthor = data.author || '';
+      let authorObj = {
+        name: 'Unknown',
+        role: data.authorTitle || 'Contributor',
+        avatar: 'U'
+      };
+      
+      if (typeof rawAuthor === 'string') {
+        if (rawAuthor) {
+          authorObj.name = rawAuthor;
+          authorObj.avatar = getInitials(rawAuthor);
+        }
+      } else if (rawAuthor && typeof rawAuthor === 'object') {
+        authorObj.name = rawAuthor.name || 'Unknown';
+        authorObj.role = rawAuthor.role || data.authorTitle || 'Contributor';
+        authorObj.avatar = rawAuthor.avatar || getInitials(authorObj.name);
+      }
+      
+      dbArticles.push({
         id: doc.id,
-        ...data
+        title: data.title || '',
+        subtitle: data.subtitle || '',
+        category: data.category || '',
+        summary: data.summary || '',
+        content: data.content || '',
+        author: authorObj,
+        authorTitle: authorObj.role,
+        date: formattedDate,
+        createdAt: dateVal,
+        readTime: data.readTime || '3 min read',
+        image: data.image || '',
+        images: data.images || [],
+        likes: data.likes || 0,
+        likedBy: data.likedBy || [],
+        status: data.status || 'Pending',
+        reviews: data.reviews || [],
+        comments: data.comments || []
       });
     });
+
+    state.articles = dbArticles;
+    saveArticlesToStorage();
+
+    // Auto-sync any unsynced local articles to cloud database
+    syncLocalArticlesToCloud();
 
     // Re-render based on current view
     if (state.currentView === 'home') {
