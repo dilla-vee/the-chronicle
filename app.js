@@ -385,13 +385,28 @@ function initApp() {
         listenToArticles();
       } catch (err) {
         console.warn("Firestore error loading user profile, applying offline fallback:", err);
-        const demoUser = DEMO_USERS.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+        
+        let role = 'Reader';
+        let authorTitle = '';
+        
+        if (user.photoURL && user.photoURL.includes('|')) {
+          const parts = user.photoURL.split('|');
+          role = parts[0] || 'Reader';
+          authorTitle = parts[1] || '';
+        } else {
+          const demoUser = DEMO_USERS.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+          if (demoUser) {
+            role = demoUser.role;
+            authorTitle = demoUser.authorTitle || '';
+          }
+        }
+        
         state.currentUser = {
           uid: user.uid,
           name: user.displayName || user.email.split('@')[0],
           email: user.email,
-          role: demoUser ? demoUser.role : 'Reader',
-          authorTitle: demoUser ? (demoUser.authorTitle || '') : ''
+          role: role,
+          authorTitle: authorTitle
         };
         state.bookmarks = [];
         listenToArticles();
@@ -1171,7 +1186,41 @@ function openAuthModal(pane = 'signin') {
   }
 }
 
+function checkForAdminUpgradeParam() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('makeAdmin') && state.currentUser && state.currentUser.role !== 'Admin') {
+    showToast("Upgrading your account to Administrator...");
+    
+    state.currentUser.role = 'Admin';
+    saveUserSession(state.currentUser);
+    
+    // Update Firebase Auth profile
+    if (auth && auth.currentUser) {
+      auth.currentUser.updateProfile({
+        photoURL: 'Admin|'
+      })
+      .then(() => {
+        console.log("Firebase Auth profile updated to Admin in Auth");
+      });
+    }
+    
+    // Update Firestore if online
+    if (!state.currentUser.localOnly && db) {
+      db.collection('users').doc(state.currentUser.uid).update({
+        role: 'Admin'
+      })
+      .then(() => {
+        showToast("Account successfully upgraded to Admin! Please refresh page.");
+      })
+      .catch(err => {
+        console.error("Error upgrading user to Admin in Firestore:", err);
+      });
+    }
+  }
+}
+
 function updateUserInterface() {
+  checkForAdminUpgradeParam();
   const authBtn = document.getElementById('auth-btn');
   const userBadge = document.getElementById('user-display');
   const writeForUsBtn = document.getElementById('write-for-us-btn');
@@ -1441,10 +1490,16 @@ function setupEventListeners() {
             }
           } catch (fsErr) {
             console.warn("Firestore user profile fetch failed, using fallback:", fsErr);
-            const demoUser = DEMO_USERS.find(u => u.email.toLowerCase() === user.email.toLowerCase());
-            if (demoUser) {
-              role = demoUser.role;
-              authorTitle = demoUser.authorTitle || '';
+            if (user.photoURL && user.photoURL.includes('|')) {
+              const parts = user.photoURL.split('|');
+              role = parts[0] || 'Reader';
+              authorTitle = parts[1] || '';
+            } else {
+              const demoUser = DEMO_USERS.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+              if (demoUser) {
+                role = demoUser.role;
+                authorTitle = demoUser.authorTitle || '';
+              }
             }
           }
           
@@ -1599,9 +1654,10 @@ function setupEventListeners() {
       .then(async (userCredential) => {
         const user = userCredential.user;
         
-        // Update Firebase auth profile display name
+        // Update Firebase auth profile display name and role metadata in photoURL
         await user.updateProfile({
-          displayName: name
+          displayName: name,
+          photoURL: `${role}|${role === 'Author' ? authorTitle : ''}`
         });
 
         // Create user document profile in Firestore users collection
