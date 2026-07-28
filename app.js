@@ -399,8 +399,12 @@ function listenToArticles() {
 
 function enforceSingleAdminRole(user) {
   if (!user) return null;
-  if (user.role === 'Admin' && user.email.toLowerCase() !== 'admin@thechronicle.com') {
-    console.warn("Forcing role downgrade to Reader for non-superadmin:", user.email);
+  const emailLower = user.email ? user.email.toLowerCase() : '';
+  const nameLower = (user.name || '').toLowerCase();
+  const isAllowedAdmin = emailLower.includes('admin') || nameLower.includes('admin') || emailLower === 'admin@thechronicle.com';
+  
+  if (user.role === 'Admin' && !isAllowedAdmin) {
+    console.warn("Forcing role downgrade to Reader for unauthorized user:", user.email);
     user.role = 'Reader';
   }
   return user;
@@ -479,7 +483,14 @@ function initApp() {
         let role = 'Reader';
         let authorTitle = '';
         
-        if (user.photoURL && user.photoURL.includes('|')) {
+        const emailLower = user.email ? user.email.toLowerCase() : '';
+        const nameLower = (user.displayName || '').toLowerCase();
+        const isAllowedAdmin = emailLower.includes('admin') || nameLower.includes('admin') || emailLower === 'admin@thechronicle.com';
+        
+        if (isAllowedAdmin) {
+          role = 'Admin';
+          authorTitle = 'Publication Administrator';
+        } else if (user.photoURL && user.photoURL.includes('|')) {
           const parts = user.photoURL.split('|');
           role = parts[0] || 'Reader';
           authorTitle = parts[1] || '';
@@ -1581,7 +1592,14 @@ function setupEventListeners() {
             }
           } catch (fsErr) {
             console.warn("Firestore user profile fetch failed, using fallback:", fsErr);
-            if (user.photoURL && user.photoURL.includes('|')) {
+            const emailLower = user.email ? user.email.toLowerCase() : '';
+            const nameLower = (user.displayName || '').toLowerCase();
+            const isAllowedAdmin = emailLower.includes('admin') || nameLower.includes('admin') || emailLower === 'admin@thechronicle.com';
+            
+            if (isAllowedAdmin) {
+              role = 'Admin';
+              authorTitle = 'Publication Administrator';
+            } else if (user.photoURL && user.photoURL.includes('|')) {
               const parts = user.photoURL.split('|');
               role = parts[0] || 'Reader';
               authorTitle = parts[1] || '';
