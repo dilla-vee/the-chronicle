@@ -372,7 +372,7 @@ function initApp() {
       if (state.currentUser && state.currentUser.localOnly) {
         console.log("Preserving local user session:", state.currentUser);
       } else {
-        state.currentUser = null;
+        saveUserSession(null);
         // Load bookmarks from local storage for anonymous session
         const savedBookmarks = localStorage.getItem('chronicle_bookmarks');
         if (savedBookmarks) {
@@ -1319,6 +1319,8 @@ function setupEventListeners() {
 
       auth.signOut()
         .then(() => {
+          saveUserSession(null);
+          state.bookmarks = [];
           showToast("Signed out successfully.");
           navigateTo('home');
         })
