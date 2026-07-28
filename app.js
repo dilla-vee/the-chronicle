@@ -316,12 +316,21 @@ function listenToArticles() {
   });
 }
 
+function enforceSingleAdminRole(user) {
+  if (!user) return null;
+  if (user.role === 'Admin' && user.email.toLowerCase() !== 'admin@thechronicle.com') {
+    console.warn("Forcing role downgrade to Reader for non-superadmin:", user.email);
+    user.role = 'Reader';
+  }
+  return user;
+}
+
 function initApp() {
   // Load local user session if present
   const savedUser = localStorage.getItem('chronicle_user');
   if (savedUser) {
     try {
-      state.currentUser = JSON.parse(savedUser);
+      state.currentUser = enforceSingleAdminRole(JSON.parse(savedUser));
       state.bookmarks = state.currentUser.bookmarks || [];
     } catch (e) {
       state.currentUser = null;
@@ -362,23 +371,23 @@ function initApp() {
         const doc = await db.collection('users').doc(user.uid).get();
         if (doc.exists) {
           const udata = doc.data();
-          state.currentUser = {
+          state.currentUser = enforceSingleAdminRole({
             uid: user.uid,
             name: udata.name,
             email: udata.email,
             role: udata.role,
             authorTitle: udata.authorTitle
-          };
+          });
           state.bookmarks = udata.bookmarks || [];
         } else {
           // Fallback if user profile doesn't exist in Firestore
-          state.currentUser = {
+          state.currentUser = enforceSingleAdminRole({
             uid: user.uid,
             name: user.displayName || user.email.split('@')[0],
             email: user.email,
             role: 'Reader',
             authorTitle: ''
-          };
+          });
           state.bookmarks = [];
         }
         // Sync Firestore articles now that authentication has succeeded
@@ -401,13 +410,13 @@ function initApp() {
           }
         }
         
-        state.currentUser = {
+        state.currentUser = enforceSingleAdminRole({
           uid: user.uid,
           name: user.displayName || user.email.split('@')[0],
           email: user.email,
           role: role,
           authorTitle: authorTitle
-        };
+        });
         state.bookmarks = [];
         listenToArticles();
       }
@@ -441,9 +450,10 @@ function saveArticlesToStorage() {
 }
 
 function saveUserSession(user) {
-  state.currentUser = user;
-  if (user) {
-    localStorage.setItem('chronicle_user', JSON.stringify(user));
+  const normalizedUser = enforceSingleAdminRole(user);
+  state.currentUser = normalizedUser;
+  if (normalizedUser) {
+    localStorage.setItem('chronicle_user', JSON.stringify(normalizedUser));
   } else {
     localStorage.removeItem('chronicle_user');
     // Unsubscribe from Firestore snapshot listener on logout
