@@ -228,13 +228,23 @@ let state = {
   uploadedImageUrl: null
 };
 
+let articlesUnsubscribe = null;
+
 function listenToArticles() {
   if (isLocalSession()) {
+    if (articlesUnsubscribe) {
+      articlesUnsubscribe();
+      articlesUnsubscribe = null;
+    }
     loadLocalArticles();
     return;
   }
 
-  db.collection('articles').orderBy('createdAt', 'desc').onSnapshot(async (snapshot) => {
+  if (articlesUnsubscribe) {
+    return; // Already listening
+  }
+
+  articlesUnsubscribe = db.collection('articles').orderBy('createdAt', 'desc').onSnapshot(async (snapshot) => {
     if (snapshot.empty) {
       // Seed database if it's completely empty!
       console.log("Firestore articles collection is empty. Seeding INITIAL_ARTICLES...");
@@ -294,6 +304,10 @@ function listenToArticles() {
   }, (err) => {
     console.error("Firestore listener error:", err);
     showToast("Database unavailable. Continuing in local demo mode.");
+    if (articlesUnsubscribe) {
+      articlesUnsubscribe();
+      articlesUnsubscribe = null;
+    }
     loadLocalArticles();
   });
 }
@@ -363,6 +377,8 @@ function initApp() {
           };
           state.bookmarks = [];
         }
+        // Sync Firestore articles now that authentication has succeeded
+        listenToArticles();
       } catch (err) {
         console.error("Error loading user profile:", err);
       }
@@ -401,6 +417,11 @@ function saveUserSession(user) {
     localStorage.setItem('chronicle_user', JSON.stringify(user));
   } else {
     localStorage.removeItem('chronicle_user');
+    // Unsubscribe from Firestore snapshot listener on logout
+    if (articlesUnsubscribe) {
+      articlesUnsubscribe();
+      articlesUnsubscribe = null;
+    }
   }
   updateUserInterface();
 }
