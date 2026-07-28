@@ -1616,7 +1616,59 @@ function setupEventListeners() {
             navigateTo('home');
           }, 500);
         })
-        .catch((error) => {
+        .catch(async (error) => {
+          // Auto-bootstrap super admin account if it does not exist in Firebase yet!
+          if (emailVal.toLowerCase() === 'admin@thechronicle.com' && passwordVal === 'admin123') {
+            const isNoUser = error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential';
+            if (isNoUser) {
+              showToast("Bootstrapping Super Admin account...");
+              try {
+                const userCredential = await auth.createUserWithEmailAndPassword(emailVal, passwordVal);
+                const user = userCredential.user;
+                
+                await user.updateProfile({
+                  displayName: "System Admin",
+                  photoURL: "Admin|"
+                });
+                
+                if (db) {
+                  try {
+                    await db.collection('users').doc(user.uid).set({
+                      name: "System Admin",
+                      email: emailVal,
+                      role: "Admin",
+                      authorTitle: "Publication Administrator",
+                      bookmarks: []
+                    });
+                  } catch (dbErr) {
+                    console.error("Failed to write superadmin to Firestore, relying on Auth profile:", dbErr);
+                  }
+                }
+                
+                const sessionUser = {
+                  uid: user.uid,
+                  name: "System Admin",
+                  email: emailVal,
+                  role: "Admin",
+                  authorTitle: "Publication Administrator",
+                  bookmarks: []
+                };
+                saveUserSession(sessionUser);
+                state.bookmarks = [];
+                listenToArticles();
+                showToast("Super Admin account successfully created and logged in!");
+                const modal = document.getElementById('auth-modal');
+                if (modal) modal.classList.add('hidden');
+                setTimeout(() => {
+                  navigateTo('admin');
+                }, 500);
+                return;
+              } catch (createErr) {
+                console.error("Failed to bootstrap super admin:", createErr);
+              }
+            }
+          }
+
           console.error('Firebase sign-in error:', error.code, error.message, error);
           
           // Provide user-friendly error messages
