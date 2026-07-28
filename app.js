@@ -1499,7 +1499,7 @@ function setupEventListeners() {
             }
           }
           
-          showToast(errorMsg);
+          showToast(`${errorMsg} (Firebase Details: ${error.code || 'unknown'} - ${error.message || 'no details'})`);
         });
     } else {
       // Firebase not available, use localStorage only
