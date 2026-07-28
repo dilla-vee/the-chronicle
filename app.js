@@ -1682,9 +1682,31 @@ function setupEventListeners() {
     if (!state.currentUser) {
       showToast("Please sign in or register as an Author to publish articles.");
       openAuthModal('signup');
-    } else if (state.currentUser.role !== 'Author') {
+    } else if (state.currentUser.role === 'Reader') {
+      showToast("Upgrading your account to Author...");
+      
+      // Update memory & localStorage session
+      state.currentUser.role = 'Author';
+      state.currentUser.authorTitle = 'Contributor';
+      saveUserSession(state.currentUser);
+      
+      // Update Firestore if online
+      if (!state.currentUser.localOnly && db) {
+        db.collection('users').doc(state.currentUser.uid).update({
+          role: 'Author',
+          authorTitle: 'Contributor'
+        })
+        .then(() => {
+          showToast("Account successfully upgraded to Author!");
+        })
+        .catch(err => {
+          console.error("Error upgrading user role in Firestore:", err);
+        });
+      }
+      
+      navigateTo('write');
+    } else if (state.currentUser.role !== 'Author' && state.currentUser.role !== 'Admin') {
       showToast("Access Denied: Writer Dashboard requires an Author profile.");
-      // Prompt option to update role or sign out
       openAuthModal('signup');
     } else {
       navigateTo('write');
