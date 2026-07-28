@@ -380,7 +380,17 @@ function initApp() {
         // Sync Firestore articles now that authentication has succeeded
         listenToArticles();
       } catch (err) {
-        console.error("Error loading user profile:", err);
+        console.warn("Firestore error loading user profile, applying offline fallback:", err);
+        const demoUser = DEMO_USERS.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+        state.currentUser = {
+          uid: user.uid,
+          name: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          role: demoUser ? demoUser.role : 'Reader',
+          authorTitle: demoUser ? (demoUser.authorTitle || '') : ''
+        };
+        state.bookmarks = [];
+        listenToArticles();
       }
     } else {
       // Only clear user session if it is a Firebase session.
@@ -1410,15 +1420,28 @@ function setupEventListeners() {
       auth.signInWithEmailAndPassword(emailVal, passwordVal)
         .then(async (userCredential) => {
           const user = userCredential.user;
-          // Fetch user profile from Firestore to redirect correctly
-          const doc = await db.collection('users').doc(user.uid).get();
+          // Fetch user profile from Firestore to redirect correctly, with safety fallback
           let role = 'Reader';
           let name = user.displayName || user.email.split('@')[0];
+          let authorTitle = '';
+          let bookmarks = [];
           
-          if (doc.exists) {
-            const data = doc.data();
-            role = data.role || 'Reader';
-            name = data.name || name;
+          try {
+            const doc = await db.collection('users').doc(user.uid).get();
+            if (doc.exists) {
+              const data = doc.data();
+              role = data.role || 'Reader';
+              name = data.name || name;
+              authorTitle = data.authorTitle || '';
+              bookmarks = data.bookmarks || [];
+            }
+          } catch (fsErr) {
+            console.warn("Firestore user profile fetch failed, using fallback:", fsErr);
+            const demoUser = DEMO_USERS.find(u => u.email.toLowerCase() === user.email.toLowerCase());
+            if (demoUser) {
+              role = demoUser.role;
+              authorTitle = demoUser.authorTitle || '';
+            }
           }
           
           // Save Firebase user session WITHOUT localOnly flag
@@ -1427,8 +1450,8 @@ function setupEventListeners() {
             name: name,
             email: user.email,
             role: role,
-            authorTitle: doc.exists ? (doc.data().authorTitle || '') : '',
-            bookmarks: doc.exists ? (doc.data().bookmarks || []) : []
+            authorTitle: authorTitle,
+            bookmarks: bookmarks
           };
           saveUserSession(sessionUser);
           state.bookmarks = sessionUser.bookmarks;
