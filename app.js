@@ -365,6 +365,25 @@ function listenToArticles() {
       });
     });
 
+    // Merge local-only articles so they don't get wiped out on Firestore sync updates
+    const localArticlesRaw = localStorage.getItem('chronicle_articles');
+    if (localArticlesRaw) {
+      try {
+        const localArticles = JSON.parse(localArticlesRaw);
+        for (const localArt of localArticles) {
+          const existsInCloud = dbArticles.some(a => a.id === localArt.id);
+          if (!existsInCloud) {
+            dbArticles.push(localArt);
+          }
+        }
+      } catch (e) {
+        console.error("Error merging local articles on snapshot:", e);
+      }
+    }
+    
+    // Sort merged articles by createdAt descending
+    dbArticles.sort((a, b) => b.createdAt - a.createdAt);
+
     state.articles = dbArticles;
     saveArticlesToStorage();
 
